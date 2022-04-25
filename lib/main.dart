@@ -5,11 +5,28 @@ import 'package:provider/provider.dart';
 
 import 'model/photo_provider.dart';
 import 'widget/image_item_widget.dart';
+import 'widget/entity_route.dart';
 import 'dart:math';
 
 final PhotoProvider provider = PhotoProvider();
 
 void main() => runApp(const _SimpleExampleApp());
+
+const MaterialColor white = const MaterialColor(
+  0xFFFFFFFF,
+  const <int, Color>{
+    50: const Color(0xFFFFFFFF),
+    100: const Color(0xFFFFFFFF),
+    200: const Color(0xFFFFFFFF),
+    300: const Color(0xFFFFFFFF),
+    400: const Color(0xFFFFFFFF),
+    500: const Color(0xFFFFFFFF),
+    600: const Color(0xFFFFFFFF),
+    700: const Color(0xFFFFFFFF),
+    800: const Color(0xFFFFFFFF),
+    900: const Color(0xFFFFFFFF),
+  },
+);
 
 class _SimpleExampleApp extends StatelessWidget {
   const _SimpleExampleApp({Key? key}) : super(key: key);
@@ -19,7 +36,13 @@ class _SimpleExampleApp extends StatelessWidget {
     return OKToast(
       child: ChangeNotifierProvider<PhotoProvider>.value(
         value: provider, // This is for the advanced usages.
-        child: const MaterialApp(home: _SimpleExamplePage()),
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: _SimpleExamplePage(),
+          theme: ThemeData(
+            primarySwatch: white,
+          ),
+        ),
       ),
     );
   }
@@ -208,10 +231,18 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
           final AssetEntity entity = _entities![index];
           return Padding(
             padding: const EdgeInsets.all(8.0),
-            child: ImageItemWidget(
-              key: ValueKey<int>(index),
-              entity: entity,
-              option: const ThumbnailOption(size: ThumbnailSize.square(200)),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => EntityRoute(entity: entity)),
+                );
+              },
+              child: ImageItemWidget(
+                key: ValueKey<int>(index),
+                entity: entity,
+                option: const ThumbnailOption(size: ThumbnailSize.square(200)),
+              ),
             ),
           );
         },
