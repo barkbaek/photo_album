@@ -21,7 +21,7 @@ class _EntityRouteState extends State<EntityRoute> {
   @override
   initState() {
     super.initState();
-    test();
+    init();
   }
 
   @override
@@ -32,7 +32,7 @@ class _EntityRouteState extends State<EntityRoute> {
     }
   }
 
-  void test() async {
+  void init() async {
     if (widget.entity!.type == AssetType.video) {
       File? videoFile = await widget.entity!.fileWithSubtype;
       if (videoFile != null) {
@@ -80,6 +80,7 @@ class _EntityRouteState extends State<EntityRoute> {
             _controller == null ? ImageItemWidget(
               key: ValueKey<int>(0),
               entity: widget.entity!,
+              useToggle: false,
               option: ThumbnailOption(
                   size: ThumbnailSize.square(width.toInt())),
             )

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:list_photo_album_test/selected_asset_notifier.dart';
 import 'package:oktoast/oktoast.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +10,7 @@ import 'widget/image_item_widget.dart';
 import 'widget/entity_route.dart';
 import 'dart:math';
 
-final PhotoProvider provider = PhotoProvider();
+// final PhotoProvider provider = PhotoProvider();
 
 void main() => runApp(const _SimpleExampleApp());
 
@@ -34,8 +36,8 @@ class _SimpleExampleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OKToast(
-      child: ChangeNotifierProvider<PhotoProvider>.value(
-        value: provider, // This is for the advanced usages.
+      child: ChangeNotifierProvider<SelectedAssetNotifier>(
+        create: (context) => SelectedAssetNotifier(),
         child: MaterialApp(
           debugShowCheckedModeBanner: false,
           home: _SimpleExamplePage(),
@@ -77,6 +79,8 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
   bool _isLoadingMore = false;
   bool _hasMoreToLoad = true;
 
+  BuildContext? _context;
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +93,11 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
       _selectedFolderId = id;
     });
     _requestAssets();
+
+    if (_context != null) {
+      final selectedAssetNotifier = _context!.read<SelectedAssetNotifier>();
+      selectedAssetNotifier.clearSelectedAsset();
+    }
   }
 
   Future<void> _requestAssets() async {
@@ -154,16 +163,33 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
           leading: ImageItemWidget(
             key: ValueKey<int>(new Random().nextInt(1000)),
             entity: entity,
+            useToggle: false,
             option: const ThumbnailOption(size: ThumbnailSize.square(50)),
           ),
           title: Text(path.name),
-          trailing: Text(
-            _selectedFolderId == null
-                ? (selectedFolderId == path.id ? "✔" : "")
-                : (_selectedFolderId == path.id ? "✔" : ""),
-            style: TextStyle(
-              color: Colors.lightBlue,
-            ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _selectedFolderId == null
+                  ? (
+                  selectedFolderId == path.id ?
+                  Icon(
+                    Icons.check,
+                    color: Colors.lightBlueAccent,
+                    size: 20,
+                  )
+                      : Container()
+              )
+                  : (
+                  _selectedFolderId == path.id ?
+                  Icon(
+                    Icons.check,
+                    color: Colors.lightBlueAccent,
+                    size: 20,
+                  )
+                      : Container()
+              ),
+            ],
           ),
         ),
       ));
@@ -231,18 +257,18 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
           final AssetEntity entity = _entities![index];
           return Padding(
             padding: const EdgeInsets.all(8.0),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => EntityRoute(entity: entity)),
-                );
-              },
-              child: ImageItemWidget(
-                key: ValueKey<int>(index),
-                entity: entity,
-                option: const ThumbnailOption(size: ThumbnailSize.square(200)),
-              ),
+            child: ImageItemWidget(
+              key: ValueKey<int>(index),
+              entity: entity,
+              option: const ThumbnailOption(size: ThumbnailSize.square(200)),
+              useToggle: true,
+              // onTap: () {
+              //   // Navigator.push(
+              //   //   context,
+              //   //   MaterialPageRoute(builder: (context) => EntityRoute(entity: entity)),
+              //   // );
+              //   print(entity);
+              // },
             ),
           );
         },
@@ -260,6 +286,9 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
 
   @override
   Widget build(BuildContext context) {
+    _context = context;
+    final selectedAssetNotifier = context.watch<SelectedAssetNotifier>();
+
     return Scaffold(
       body: Column(
         children: <Widget>[
@@ -279,6 +308,26 @@ class _SimpleExamplePageState extends State<_SimpleExamplePage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  actions: [
+                    IconButton(
+                      icon: Icon(Icons.check),
+                      onPressed: () {
+                        Alert(
+                          context: context,
+                          type: AlertType.info,
+                          title: "현재 선택된 Assets",
+                          desc: selectedAssetNotifier.selectedAsset.toString(),
+                          buttons: [
+                            DialogButton(
+                              child: Text("닫기"),
+                              onPressed: () => Navigator.pop(context),
+                              width: 120,
+                            ),
+                          ],
+                        ).show();
+                      },
+                    ),
+                  ],
                   bottom: PreferredSize(
                     preferredSize: Size.fromHeight(30.0),
                     child: TabBar(
